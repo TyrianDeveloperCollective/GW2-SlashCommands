@@ -1,0 +1,12 @@
+[submodule "Scripts"]
+	path = Scripts
+	url = https://github.com/RaidcoreGG/RCGG-Scripts
+[submodule "thirdparty/Nexus"]
+	path = thirdparty/Nexus
+	url = https://github.com/RaidcoreGG/RCGG-lib-nexus-api
+[submodule "thirdparty/GW2RE"]
+	path = thirdparty/GW2RE
+	url = https://github.com/TyrianDeveloperCollective/GW2RE-lib
+[submodule "thirdparty/Util"]
+	path = thirdparty/Util
+	url = https://github.com/RaidcoreGG/RCGG-Utils
