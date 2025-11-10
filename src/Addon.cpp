@@ -225,7 +225,7 @@ namespace Addon
 		);
 #endif
 
-		return 1;
+		return result;
 	}
 
 	uint64_t __fastcall OnEngineTick(void*, void*)
