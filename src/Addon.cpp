@@ -133,8 +133,8 @@ namespace Addon
 	/// s_CustomCommands:
 	/// 	Lookup table for custom registered commands.
 	///----------------------------------------------------------------------------------------------------
-	static std::map<std::string, std::string> s_CustomCommands{};
-	static std::mutex                         s_CustomCommandsMutex{};
+	static std::map<std::string, FUNC_ONCUSTOMCOMMAND> s_CustomCommands{};
+	static std::mutex                                  s_CustomCommandsMutex{};
 
 	void Load(AddonAPI_t* aApi)
 	{
@@ -168,6 +168,9 @@ namespace Addon
 		{
 			s_APIDefs->InputBinds_RegisterWithString(command.c_str(), OnInputBind, "(null)");
 		}
+
+		RegisterCommand("/rc", OnCommand_Raidcore);
+		RegisterCommand("/sc", OnCommand_SnowCrows);
 	}
 
 	void Unload()
@@ -203,9 +206,71 @@ namespace Addon
 		}
 	}
 
+	void OnCommand_Raidcore(const char* aCommand)
+	{
+		ShellExecute(0, 0, L"http://raidcore.gg", 0, 0, SW_SHOW);
+	}
+
+	void OnCommand_SnowCrows(const char* aCommand)
+	{
+		ShellExecute(0, 0, L"http://snowcrows.com", 0, 0, SW_SHOW);
+	}
+
+	void RegisterCommand(const char* aCommand, FUNC_ONCUSTOMCOMMAND aCallback)
+	{
+		const std::lock_guard<std::mutex> lock(s_CustomCommandsMutex);
+
+		auto it = s_CustomCommands.find(aCommand);
+
+		if (it == s_CustomCommands.end())
+		{
+			s_CustomCommands.emplace(aCommand, aCallback);
+		}
+	}
+
+	void DeregisterCommand(const char* aCommand, FUNC_ONCUSTOMCOMMAND aCallback)
+	{
+		const std::lock_guard<std::mutex> lock(s_CustomCommandsMutex);
+
+		auto it = s_CustomCommands.find(aCommand);
+
+		if (it != s_CustomCommands.end())
+		{
+			s_CustomCommands.erase(it);
+		}
+	}
+
+	uint64_t OnCustomCommand(const wchar_t* aCommand)
+	{
+		/// Instead of storing a function and looking up a map:
+		/// API->QueryFunction()
+		/// If the function registered as "/examplecustomcommand" exists, execute it.
+		/// else return 0, since it's not a registered custom command.
+		
+		std::string fullcommand = String::ToString(aCommand);
+		std::string keyword = String::Split(fullcommand, " ")[0];
+
+		const std::lock_guard<std::mutex> lock(s_CustomCommandsMutex);
+
+		auto it = s_CustomCommands.find(keyword);
+
+		if (it != s_CustomCommands.end())
+		{
+			it->second(fullcommand.c_str());
+			return 1;
+		}
+
+		return 0;
+	}
+
 	uint64_t __fastcall OnCommand(const wchar_t* aCommand)
 	{
 		const std::lock_guard<std::mutex> lock(s_CmdHandlerHook->Mutex);
+
+		if (OnCustomCommand(aCommand))
+		{
+			return 1;
+		}
 
 		uint64_t result = s_CmdHandlerHook->OriginalFunction(aCommand);
 
@@ -225,7 +290,12 @@ namespace Addon
 		);
 #endif
 
-		return result;
+		if (result)
+		{
+			return result;
+		}
+
+		return 0;
 	}
 
 	uint64_t __fastcall OnEngineTick(void*, void*)
