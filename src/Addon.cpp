@@ -57,7 +57,18 @@ namespace Addon
 	/// 	List of commands for which InputBinds are registered.
 	///----------------------------------------------------------------------------------------------------
 	static const std::vector<std::string> s_Commands{
+		/* General Commands */
 		"/gg",
+		"/mentor",
+		"/ip",
+		"/age",
+		"/deaths",
+		"/inspect",
+		"/lfg",
+
+		/* WvW */
+		"/squadinfo",
+		"/supplyinfo",
 
 		/* Emotes */
 		"/barbecue",
